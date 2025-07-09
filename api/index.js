@@ -28,6 +28,15 @@ const authenticateApiKey = (req, res, next) => {
   next(); // API Key hợp lệ, tiếp tục xử lý request
 };
 
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    message: 'Welcome to Play Store Icon Finder API! Use /api/search for searches.',
+    endpoints: {
+      search: '/api/search?term=<query>&country=<country_code>&page=<page_number>&limit=<items_per_page>'
+    }
+  });
+});
+
 app.get('/api/search', async (req, res) => {
   const { term, country = 'us', page = 1, limit = 10 } = req.query;
 
@@ -99,6 +108,3 @@ app.get('/api/search', async (req, res) => {
 
 export default app;
 
-// app.listen(PORT, () => {
-//   console.log(`Máy chủ API (có cache) đang chạy tại http://localhost:${PORT}`);
-// });
