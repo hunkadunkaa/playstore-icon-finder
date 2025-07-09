@@ -1,0 +1,26 @@
+{
+  "name": "store-icon-finder",
+  "version": "0.0.1",
+  "main": "code.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "hunkadunkaa",
+  "license": "ISC",
+  "description": "figma plugin to export play store icon",
+  "dependencies": {
+    "@figma/eslint-plugin-figma-plugins": "*",
+    "@typescript-eslint/eslint-plugin": "*",
+    "@typescript-eslint/parser": "*",
+    "cors": "^2.8.5",
+    "eslint": "^9.30.1",
+    "express": "^5.1.0",
+    "figma": "^0.0.1",
+    "google-play-scraper": "^10.0.1",
+    "parse": "^6.1.1",
+    "typescript": "^5.8.3"
+  }
+}
