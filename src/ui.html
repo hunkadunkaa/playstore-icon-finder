@@ -1,0 +1,258 @@
+<!-- ui.html -->
+<style>
+  body { font-family: 'Inter', sans-serif; margin: 0; background-color: #F8F9FA; }
+  .plugin-container { display: flex; flex-direction: column; height: 100vh; }
+  .results-container { flex-grow: 1; overflow-y: auto; }
+  .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3498db; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .app-card { transition: background-color 0.2s ease-in-out, border-color 0.2s; }
+  .app-card:hover { background-color: #EFF6FF; }
+  .app-card.selected { border-color: #3B82F6; background-color: #DBEAFE; }
+  .action-button { transition: background-color 0.2s ease-in-out, opacity 0.2s; }
+</style>
+
+<div class="plugin-container p-4">
+  <!-- Header & Input -->
+  <h1 class="text-lg font-bold mb-3 text-gray-800">Play Store Icon Finder</h1>
+  <div class="flex space-x-2 mb-3">
+    <input type="text" id="searchInput" class="flex-grow border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập tên ứng dụng...">
+    <button id="searchButton" class="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+    </button>
+  </div>
+  
+  <!-- Options -->
+  <div class="mb-3 text-sm">
+      <div class="flex items-center justify-between">
+          <div>
+            <label for="countrySelect" class="font-medium text-gray-600 mr-2">Quốc gia:</label>
+            <select id="countrySelect" class="border border-gray-300 rounded-md px-2 py-1 text-sm">
+              <option value="us">US</option><option value="vn">Vietnam</option><option value="gb">UK</option><option value="jp">Japan</option>
+            </select>
+          </div>
+          <div>
+            <label for="itemsPerPageSelect" class="font-medium text-gray-600 mr-2">Hiển thị:</label>
+            <select id="itemsPerPageSelect" class="border border-gray-300 rounded-md px-2 py-1 text-sm">
+              <option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option>
+            </select>
+          </div>
+      </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div id="actionBar" class="hidden items-center justify-between mb-2 text-sm">
+      <div class="flex items-center">
+          <input type="checkbox" id="selectAllCheckbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2">
+          <label for="selectAllCheckbox" class="font-medium">Chọn tất cả</label>
+      </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-container" id="results">
+     <p class="text-center text-gray-500 mt-8">Nhập từ khóa để bắt đầu tìm kiếm...</p>
+     <br>
+     <p class="text-center text-gray-500 mt-8">Một món đồ chơi của hungnd</p>
+     <br>
+     <img id="preview" class="w-[250px] h-64 mx-auto flex item-center" alt="" />
+  </div>
+
+  <!-- Pagination -->
+  <div id="paginationControls" class="flex items-center justify-center pt-3 text-sm"></div>
+  
+  <!-- Footer with Import Button -->
+  <div id="footerBar" class="hidden pt-3 border-t">
+      <button id="importButton" disabled class="action-button w-full font-bold py-2 px-4 rounded-md text-white bg-gray-400 cursor-not-allowed">
+        Xuất icon vào Figma
+      </button>
+  </div>
+  
+  <!-- Loading Spinner -->
+  <div id="loading" class="hidden absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+    <div class="loader"></div>
+  </div>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script>
+  // DOM Elements
+  const searchInput = document.getElementById('searchInput');
+  const searchButton = document.getElementById('searchButton');
+  const resultsDiv = document.getElementById('results');
+  const loadingDiv = document.getElementById('loading');
+  const countrySelect = document.getElementById('countrySelect');
+  const itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
+  const paginationControls = document.getElementById('paginationControls');
+  const actionBar = document.getElementById('actionBar');
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+  const importButton = document.getElementById('importButton');
+  const footerBar = document.getElementById('footerBar');
+
+  // State
+  let currentPage = 1;
+  let currentTerm = '';
+  let hasMorePages = true;
+
+  const VERCEL_API_BASE_URL = process.env.VERCEL_API_URL;
+  const FIGMA_PLUGIN_API_KEY = process.env.FIGMA_PLUGIN_API_KEY;
+
+  if (!VERCEL_API_BASE_URL || !FIGMA_PLUGIN_API_KEY) {
+        resultsDiv.innerHTML = `<p class="text-center text-red-500 mt-8">Lỗi cấu hình plugin: Thiếu URL API hoặc Plugin API Key. Vui lòng liên hệ nhà phát triển.</p>`;
+        searchButton.disabled = true;
+        console.error('Plugin configuration error: VERCEL_API_BASE_URL or FIGMA_PLUGIN_API_KEY is missing.');
+    }
+
+
+  const fetchAndRenderPage = (page, term) => {
+    if (!VERCEL_API_BASE_URL || !FIGMA_PLUGIN_API_KEY) {
+            console.error('Cannot fetch: Plugin is not properly configured.');
+            return;
+        }
+
+    loadingDiv.classList.remove('hidden');
+    searchButton.disabled = true;
+    
+    currentTerm = term;
+    currentPage = page;
+    const limit = itemsPerPageSelect.value;
+    const country = countrySelect.value;
+    const searchUrl = `${VERCEL_API_BASE_URL}/search?term=${encodeURIComponent(term)}&page=${page}&limit=${limit}&country=${country}`;
+
+    fetch(searchUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': FIGMA_PLUGIN_API_KEY // Gửi API Key của plugin trong header
+            }
+        })
+      .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }).catch(() => {
+                    throw new Error(`Server responded with status ${response.status} ${response.statusText}`);
+                });
+            }
+            return response.json();
+        })
+      .then(response => {
+        const { data, hasMore, currentPage: serverCurrentPage, source } = response;
+        hasMorePages = hasMore;
+        if(page === 1 && data.length === 0) {
+            resultsDiv.innerHTML = `<p class="text-center text-gray-500 mt-8">Không tìm thấy kết quả nào.</p>`;
+            actionBar.classList.add('hidden');
+            footerBar.classList.add('hidden');
+            paginationControls.innerHTML = '';
+            return;
+        }
+
+        actionBar.classList.remove('hidden');
+        footerBar.classList.remove('hidden');
+        renderResults(data);
+        renderPaginationControls();
+      })
+      .catch(error => {
+        resultsDiv.innerHTML = `<p class="text-center text-red-500 mt-8">Lỗi: ${error.message}.</p>`;
+      })
+      .finally(() => {
+        loadingDiv.classList.add('hidden');
+        searchButton.disabled = false;
+      });
+  };
+
+  const renderResults = (apps) => {
+    resultsDiv.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    apps.forEach(app => {
+      const card = document.createElement('div');
+      card.className = 'app-card flex items-center p-2 border rounded-lg bg-white cursor-pointer';
+      card.innerHTML = `
+        <input type="checkbox" class="item-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3" data-url="${app.icon}" data-name="${app.title}" data-developer="${app.developer}">
+        <img src="${app.icon}" class="w-12 h-12 rounded-lg mr-3 pointer-events-none">
+        <div class="flex-grow pointer-events-none">
+          <p class="font-semibold text-sm truncate">${app.title}</p>
+          <p class="text-xs text-gray-500 truncate">${app.developer}</p>
+        </div>
+      `;
+      card.onclick = (e) => {
+          const checkbox = card.querySelector('.item-checkbox');
+          if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+          updateSelectionState();
+      };
+      fragment.appendChild(card);
+    });
+    resultsDiv.appendChild(fragment);
+    updateSelectionState();
+    selectAllCheckbox.checked = false;
+  };
+
+  const renderPaginationControls = () => {
+    paginationControls.innerHTML = '';
+
+    const prevButton = document.createElement('button');
+    prevButton.innerText = 'Trước';
+    prevButton.className = 'pagination-btn px-3 py-1 border rounded-l-md bg-white hover:bg-gray-100';
+    prevButton.disabled = currentPage === 1;
+    if(prevButton.disabled) prevButton.classList.add('text-gray-400', 'cursor-not-allowed');
+    prevButton.onclick = () => fetchAndRenderPage(currentPage - 1, currentTerm);
+    paginationControls.appendChild(prevButton);
+
+    const pageInfo = document.createElement('span');
+    pageInfo.className = 'px-4 py-1 border-t border-b bg-white font-bold';
+    pageInfo.innerText = `Trang ${currentPage}`;
+    paginationControls.appendChild(pageInfo);
+
+    const nextButton = document.createElement('button');
+    nextButton.innerText = 'Sau';
+    nextButton.className = 'pagination-btn px-3 py-1 border rounded-r-md bg-white hover:bg-gray-100';
+    nextButton.disabled = !hasMorePages;
+    if(nextButton.disabled) nextButton.classList.add('text-gray-400', 'cursor-not-allowed');
+    nextButton.onclick = () => fetchAndRenderPage(currentPage + 1, currentTerm);
+    paginationControls.appendChild(nextButton);
+  };
+  
+  const updateSelectionState = () => {
+      const selectedCount = document.querySelectorAll('.item-checkbox:checked').length;
+      if (selectedCount > 0) {
+          importButton.disabled = false;
+          importButton.innerHTML = `Import (${selectedCount}) icon vào Figma`;
+          importButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+          importButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+      } else {
+          importButton.disabled = true;
+          importButton.innerHTML = `Import vào Figma`;
+          importButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+          importButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+      }
+      document.querySelectorAll('.app-card').forEach(card => {
+          const checkbox = card.querySelector('.item-checkbox');
+          card.classList.toggle('selected', checkbox.checked);
+      });
+  };
+
+  // --- Event Listeners ---
+  const initialSearch = () => {
+      const term = searchInput.value.trim();
+      if(term) fetchAndRenderPage(1, term);
+  }
+
+  searchButton.onclick = initialSearch;
+  searchInput.onkeyup = e => e.key === 'Enter' && initialSearch();
+  itemsPerPageSelect.onchange = () => { if(currentTerm) initialSearch() };
+  
+  selectAllCheckbox.onchange = (e) => {
+      document.querySelectorAll('.item-checkbox').forEach(checkbox => checkbox.checked = e.target.checked);
+      updateSelectionState();
+  };
+  importButton.onclick = () => {
+      const selectedItems = [];
+      document.querySelectorAll('.item-checkbox:checked').forEach(checkbox => {
+        console.log('Selected item:', checkbox.dataset);
+          selectedItems.push({ url: checkbox.dataset.url, name: checkbox.dataset.name, developer: checkbox.dataset.developer });
+      });
+      if (selectedItems.length > 0) {
+          parent.postMessage({ pluginMessage: { type: 'import-multiple', items: selectedItems } }, '*');
+      }
+  };
+</script>

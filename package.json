@@ -1,11 +1,13 @@
 {
   "name": "store-icon-finder",
   "version": "0.0.1",
-  "main": "code.ts",
+  "main": "src/code.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "dev": "webpack --mode=development --watch",
+    "build": "webpack --mode=production",
+    "start-server": "node api/index.js",  
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "hunkadunkaa",
@@ -22,5 +24,12 @@
     "google-play-scraper": "^10.0.1",
     "parse": "^6.1.1",
     "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "*",
+    "inline-chunk-html-plugin": "*",
+    "ts-loader": "*",
+    "webpack": "*",
+    "webpack-cli": "*" 
   }
 }
