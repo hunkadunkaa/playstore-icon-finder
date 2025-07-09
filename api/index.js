@@ -97,7 +97,7 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-module.exports = app;
+export default app;
 
 // app.listen(PORT, () => {
 //   console.log(`Máy chủ API (có cache) đang chạy tại http://localhost:${PORT}`);
