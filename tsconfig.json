@@ -1,0 +1,39 @@
+{
+    "compilerOptions": {
+        /* Base Options */
+        "target": "es2020", /* Compile output to specified ECMAScript target. "es2020" hoặc "esnext" tốt cho môi trường hiện đại. */
+        "module": "esnext", /* Specify module code generation: "esnext" (cho import/export) hoặc "commonjs" (cho require/module.exports). Với "type": "module" trong package.json, "esnext" là phù hợp. */
+        "lib": [
+            "es2020",
+            "dom"
+        ], /* Specify a list of library files to be included in the compilation. "dom" cần thiết cho ui.html. */
+        "outDir": "./dist", /* Specify an output folder for all emitted files. Webpack thường bỏ qua cái này, nhưng vẫn nên có. */
+        "rootDir": "./src", /* Specify the root folder within your source files. */
+        "strict": true, /* Enable all strict type-checking options. Rất khuyến khích cho chất lượng code. */
+        "esModuleInterop": true, /* Allow default imports from modules with no default export. Rất hữu ích khi import các thư viện Node.js. */
+        "skipLibCheck": true, /* Skip type checking of all declaration files (*.d.ts). */
+        "forceConsistentCasingInFileNames": true, /* Ensure that casing is consistent in imports. */
+        "resolveJsonModule": true, /* Allows importing modules with a '.json' extension. */
+        /* Plugin-specific Options (Figma) */
+        "typeRoots": [ /* Specify a list of folders for type definitions. */
+            "./node_modules/@types",
+            "./node_modules/@figma" // Quan trọng để TypeScript tìm thấy các types của Figma
+        ],
+        // Nếu bạn có file JSX/TSX (chủ yếu cho React), bạn sẽ cần:
+        // "jsx": "react", 
+        // Nếu không, bạn có thể bỏ qua dòng này.
+        /* Advanced Options */
+        "sourceMap": true, /* Generates corresponding .map file. */
+        "declaration": false, /* Generates corresponding '.d.ts' file. Thường không cần cho plugin Figma. */
+        "removeComments": true, /* Remove all comments from output. */
+        "noEmitOnError": true, /* Do not emit outputs if any errors were reported. */
+    },
+    "include": [
+        "src/**/*.ts", /* Bao gồm tất cả các file .ts trong thư mục src */
+        "src/**/*.tsx" /* Bao gồm tất cả các file .tsx trong thư mục src (nếu bạn dùng JSX/React) */
+    ],
+    "exclude": [
+        "node_modules", /* Loại trừ thư mục node_modules */
+        "dist" /* Loại trừ thư mục output */
+    ]
+}

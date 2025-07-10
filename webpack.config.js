@@ -56,7 +56,6 @@ module.exports = (env, argv) => ({
     new webpack.DefinePlugin({
       'process.env.VERCEL_API_BASE_URL': JSON.stringify(process.env.VERCEL_API_BASE_URL),
       'process.env.FIGMA_PLUGIN_API_KEY': JSON.stringify(process.env.FIGMA_PLUGIN_API_KEY),
-      // Giữ lại NODE_ENV nếu có logic phụ thuộc vào nó
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     }),
   ],

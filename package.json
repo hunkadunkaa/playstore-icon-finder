@@ -24,11 +24,11 @@
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "html-loader": "5.1.0",
     "html-webpack-plugin": "*",
     "inline-chunk-html-plugin": "*",
     "ts-loader": "*",
     "webpack": "*",
-    "webpack-cli": "*" ,
-    "html-loader": "*"
+    "webpack-cli": "*"
   }
 }
