@@ -1,5 +1,11 @@
 // Hiển thị giao diện người dùng (UI) khi plugin được chạy
-figma.showUI(__html__, { width: 380, height: 600, title: "Play Store Icon Finder" });
+figma.showUI(__html__, {
+    width: 380, height: 600, title: "Play Store Icon Finder",
+    initialData: {
+        VERCEL_API_BASE_URL: process.env.VERCEL_API_BASE_URL,
+        FIGMA_PLUGIN_API_KEY: process.env.FIGMA_PLUGIN_API_KEY,
+    }
+});
 
 // Lắng nghe các thông điệp được gửi từ file ui.html
 figma.ui.onmessage = async (msg) => {
@@ -64,9 +70,7 @@ figma.ui.onmessage = async (msg) => {
             return;
         }
 
-        // URL API của server Vercel (được inject từ Webpack)
-        const VERCEL_API_BASE_URL = process.env.VERCEL_API_URL;
-        // API Key của plugin (được inject từ Webpack)
+        const VERCEL_API_BASE_URL = process.env.VERCEL_API_BASE_URL;
         const FIGMA_PLUGIN_API_KEY = process.env.FIGMA_PLUGIN_API_KEY;
 
         if (!VERCEL_API_BASE_URL || !FIGMA_PLUGIN_API_KEY) {

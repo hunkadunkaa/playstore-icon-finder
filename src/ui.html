@@ -76,10 +76,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
 <script>
+
+  let VERCEL_API_BASE_URL_GLOBAL = '';
+  let FIGMA_PLUGIN_API_KEY_GLOBAL = '';
+
   // DOM Elements
   const searchInput = document.getElementById('searchInput');
   const searchButton = document.getElementById('searchButton');
-  console.log('searchButton:', searchButton);
   const resultsDiv = document.getElementById('results');
   const loadingDiv = document.getElementById('loading');
   const countrySelect = document.getElementById('countrySelect');
@@ -95,8 +98,6 @@
   let currentTerm = '';
   let hasMorePages = true;
 
-  // const VERCEL_API_BASE_URL = process.env.VERCEL_API_URL;
-  // const FIGMA_PLUGIN_API_KEY = process.env.FIGMA_PLUGIN_API_KEY;
 
   // if (!VERCEL_API_BASE_URL || !FIGMA_PLUGIN_API_KEY) {
   //       resultsDiv.innerHTML = `<p class="text-center text-red-500 mt-8">Lỗi cấu hình plugin: Thiếu URL API hoặc Plugin API Key. Vui lòng liên hệ nhà phát triển.</p>`;
@@ -110,6 +111,13 @@
     //         console.error('Cannot fetch: Plugin is not properly configured.');
     //         return;
     //     }
+
+    if (!VERCEL_API_BASE_URL_GLOBAL || !FIGMA_PLUGIN_API_KEY_GLOBAL) {
+            resultsDiv.innerHTML = `<p class="text-center text-red-500 mt-8">Plugin not configured. Please ensure your plugin is set up correctly in Figma.</p>`;
+            searchButton.disabled = true; // Vô hiệu hóa nút tìm kiếm
+            console.error('Plugin configuration missing in UI. VERCEL_API_BASE_URL_GLOBAL or FIGMA_PLUGIN_API_KEY_GLOBAL is empty.');
+            return;
+        }
 
     loadingDiv.classList.remove('hidden');
     searchButton.disabled = true;
@@ -271,9 +279,52 @@
       }
 
        // Lắng nghe kết quả từ code.ts
-    window.onmessage = (event) => {
-        const { type, results, hasMore, currentPage: receivedPage, source, message } = event.data.pluginMessage;
-        if (type === 'search-results') {
+  //   window.onmessage = (event) => {
+  //       const { type, results, hasMore, currentPage: receivedPage, source, message } = event.data.pluginMessage;
+  //       if (type === 'search-results') {
+  //           loadingDiv.classList.add('hidden');
+  //           searchButton.disabled = false;
+            
+  //           hasMorePages = hasMore;
+  //           currentPage = receivedPage;
+  //           currentTerm = searchInput.value.trim();
+
+  //           if (results.length === 0 && receivedPage === 1) {
+  //               resultsDiv.innerHTML = `<p class="text-center text-gray-500 mt-8">No results found.</p>`;
+  //               actionBar.classList.add('hidden');
+  //               footerBar.classList.add('hidden');
+  //               paginationControls.innerHTML = '';
+  //               return;
+  //           }
+
+  //           actionBar.classList.remove('hidden');
+  //           footerBar.classList.remove('hidden');
+  //           renderResults(results);
+  //           renderPaginationControls();
+  //           // Figma notify sẽ được xử lý từ code.ts
+  //       } else if (type === 'error') {
+  //           loadingDiv.classList.add('hidden');
+  //           searchButton.disabled = false;
+  //           resultsDiv.innerHTML = `<p class="text-center text-red-500 mt-8">Error: ${message}.</p>`;
+  //           // Figma notify sẽ được xử lý từ code.ts
+  //       }}
+  // };
+  window.onmessage = (event) => {
+        const pluginMessage = event.data.pluginMessage;
+
+        // Xử lý thông điệp cấu hình ban đầu
+        if (pluginMessage && pluginMessage.type === 'initial-config') {
+            VERCEL_API_BASE_URL_GLOBAL = pluginMessage.VERCEL_API_BASE_URL;
+            FIGMA_PLUGIN_API_KEY_GLOBAL = pluginMessage.FIGMA_PLUGIN_API_KEY;
+            // Kích hoạt các nút/chức năng sau khi config được tải
+            searchButton.disabled = false;
+            // console.log("UI received initial config:", VERCEL_API_BASE_URL_GLOBAL, FIGMA_PLUGIN_API_KEY_GLOBAL);
+            return; // Đã xử lý config, không cần xử lý tiếp như search-results
+        }
+        
+        // Xử lý các thông điệp khác (search-results, error)
+        if (pluginMessage && pluginMessage.type === 'search-results') {
+            const { results, hasMore, currentPage: receivedPage, source } = pluginMessage;
             loadingDiv.classList.add('hidden');
             searchButton.disabled = false;
             
@@ -293,12 +344,14 @@
             footerBar.classList.remove('hidden');
             renderResults(results);
             renderPaginationControls();
-            // Figma notify sẽ được xử lý từ code.ts
-        } else if (type === 'error') {
+        } else if (pluginMessage && pluginMessage.type === 'error') {
+            const { message } = pluginMessage;
             loadingDiv.classList.add('hidden');
             searchButton.disabled = false;
             resultsDiv.innerHTML = `<p class="text-center text-red-500 mt-8">Error: ${message}.</p>`;
-            // Figma notify sẽ được xử lý từ code.ts
-        }}
-  };
+        }
+    };
+
+    // Disable search button initially until config is loaded
+    searchButton.disabled = true;
 </script>

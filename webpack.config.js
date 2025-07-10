@@ -1,7 +1,8 @@
+// webpack.config.js
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const path = require('path');
-const webpack = require('webpack');
+const webpack = require('webpack'); // Quan trọng: import webpack
 
 module.exports = (env, argv) => ({
   mode: argv.mode === 'production' ? 'production' : 'development',
@@ -51,13 +52,12 @@ module.exports = (env, argv) => ({
       cache: false,
     }),
     new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/ui/]),
-    // Inject biến môi trường vào code của plugin Figma
+    // CHỈ INJECT CÁC BIẾN CẦN THIẾT CHO code.ts, KHÔNG CẦN CHO UI.HTML TRỰC TIẾP NỮA
     new webpack.DefinePlugin({
-      // URL của API Vercel đã deploy (ví dụ: https://playstore-icon-finder-pink.vercel.app/api)
       'process.env.VERCEL_API_BASE_URL': JSON.stringify(process.env.VERCEL_API_BASE_URL),
-      // API Key mà plugin Figma sẽ gửi tới server Vercel để xác thực.
-      // Giá trị của biến này CẦN KHỚP VỚI SERVER_API_KEY mà server mong đợi.
       'process.env.FIGMA_PLUGIN_API_KEY': JSON.stringify(process.env.FIGMA_PLUGIN_API_KEY),
+      // Giữ lại NODE_ENV nếu có logic phụ thuộc vào nó
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     }),
   ],
 });
