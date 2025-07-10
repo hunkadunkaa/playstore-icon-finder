@@ -10,19 +10,20 @@ const app = express();
 const cache = new Map();
 const CACHE_TTL_MS = 1000 * 60 * 30; // Cache tồn tại trong 30 phút
 
-const API_KEY = process.env.API_KEY;
+const SERVER_API_KEY = process.env.SERVER_API_KEY;
+
 app.use(cors());
 
 const authenticateApiKey = (req, res, next) => {
   const incomingApiKey = req.headers['x-api-key'];
 
-  if (!API_KEY) {
+  if (!SERVER_API_KEY) {
       // Cảnh báo nếu API_KEY không được cấu hình trên Vercel
       console.error('Lỗi cấu hình: Biến môi trường API_KEY của server chưa được đặt.');
       return res.status(500).json({ error: 'Server API Key chưa được cấu hình.' });
   }
 
-  if (!incomingApiKey || incomingApiKey !== API_KEY) {
+  if (!incomingApiKey || incomingApiKey !== SERVER_API_KEY) {
       return res.status(403).json({ error: 'Truy cập bị từ chối: API Key không hợp lệ hoặc bị thiếu.' });
   }
   next(); // API Key hợp lệ, tiếp tục xử lý request
@@ -30,14 +31,14 @@ const authenticateApiKey = (req, res, next) => {
 
 app.get('/api', (req, res) => {
   res.status(200).json({
-    message: 'Welcome to Play Store Icon Finder API! Use /api/search for searches.',
-    endpoints: {
-      search: '/api/search?term=<query>&country=<country_code>&page=<page_number>&limit=<items_per_page>'
-    }
+      message: 'Welcome to Play Store Icon Finder API! Use /api/search for searches.',
+      endpoints: {
+          search: '/api/search?term=<query>&country=<country_code>&page=<page_number>&limit=<items_per_page>'
+      }
   });
 });
 
-app.get('/api/search', async (req, res) => {
+app.get('/api/search', authenticateApiKey, async (req, res) => {
   const { term, country = 'us', page = 1, limit = 10 } = req.query;
 
   if (!term) {

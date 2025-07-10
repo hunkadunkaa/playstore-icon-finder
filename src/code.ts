@@ -70,12 +70,14 @@ figma.ui.onmessage = async (msg) => {
         const FIGMA_PLUGIN_API_KEY = process.env.FIGMA_PLUGIN_API_KEY;
 
         if (!VERCEL_API_BASE_URL || !FIGMA_PLUGIN_API_KEY) {
-            figma.notify('Lỗi cấu hình plugin: Thiếu URL API hoặc Plugin API Key.', { error: true });
-            console.error('Plugin configuration error: VERCEL_API_URL or FIGMA_PLUGIN_API_KEY is missing.');
+            figma.ui.postMessage({ type: 'error', message: 'Plugin configuration error: Missing API URL or API Key. Please contact the developer.' });
+            console.error('Plugin configuration error: VERCEL_API_BASE_URL or FIGMA_PLUGIN_API_KEY is missing.');
             return;
         }
 
-        figma.notify(`Đang tìm kiếm "${term}"...`, { timeout: 5000 });
+        // figma.notify(`Đang tìm kiếm "${term}"...`, { timeout: 5000 });
+
+
         try {
             const url = new URL(`${VERCEL_API_BASE_URL}/search`); // Ghép URL API và endpoint search
             url.searchParams.append('term', term);

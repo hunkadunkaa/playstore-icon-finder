@@ -5,9 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "webpack --mode=development --watch",
-    "build": "webpack --mode=production",
-    "start-server": "node api/index.js",  
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack --mode=production"
   },
   "keywords": [],
   "author": "hunkadunkaa",
@@ -30,6 +28,7 @@
     "inline-chunk-html-plugin": "*",
     "ts-loader": "*",
     "webpack": "*",
-    "webpack-cli": "*" 
+    "webpack-cli": "*" ,
+    "html-loader": "*"
   }
 }
