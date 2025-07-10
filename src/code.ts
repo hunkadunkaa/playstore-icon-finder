@@ -1,9 +1,10 @@
-// Hiển thị giao diện người dùng (UI) khi plugin được chạy
+import { VERCEL_API_BASE_URL, FIGMA_PLUGIN_API_KEY } from './config';
+
 figma.showUI(__html__, {
     width: 380, height: 600, title: "Play Store Icon Finder",
     initialData: {
-        VERCEL_API_BASE_URL: process.env.VERCEL_API_BASE_URL,
-        FIGMA_PLUGIN_API_KEY: process.env.FIGMA_PLUGIN_API_KEY,
+        VERCEL_API_BASE_URL: VERCEL_API_BASE_URL,
+        FIGMA_PLUGIN_API_KEY: FIGMA_PLUGIN_API_KEY,
     }
 });
 
